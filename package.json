@@ -1,0 +1,25 @@
+{
+  "name": "zut_calendar_js",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "server": "nodemon index.js",
+    "development": "concurrently --kill-others-on-fail \"npm run server\" \"npm run start --prefix client\""
+  },
+  "author": "JayK4yy",
+  "license": "ISC",
+  "dependencies": {
+    "@google-cloud/local-auth": "^2.1.0",
+    "body-parser": "^1.20.0",
+    "concurrently": "^7.4.0",
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.1",
+    "googleapis": "^105.0.0",
+    "moment": "^2.29.4",
+    "process": "^0.11.10",
+    "puppeteer": "^17.1.3"
+  }
+}

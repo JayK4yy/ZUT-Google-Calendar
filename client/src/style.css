@@ -1,0 +1,97 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
+
+body {
+    background: url("../public/background.jpg") center;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+    height: 100vh;
+    color: white !important;
+    padding: 40px 20px 20px;
+    font-family: 'Poppins', sans-serif !important;
+}
+
+h4 {
+    font-size: 20px;
+    margin-bottom: 30px;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 700px !important;
+    background-color: rgba(200, 200, 200, 0.2);
+    -webkit-backdrop-filter: blur(50px);
+    backdrop-filter: blur(50px);
+    box-shadow: 10px 5px 20px rgba(0, 0, 0, 0.3);
+    border-radius: 30px;
+}
+
+button {
+    border-radius: 30px !important;
+}
+
+h5, #title {
+    text-shadow: 1px 2px 3px rgba(0, 0, 0, 0.5);
+}
+
+.wide-btn {
+    width: 250px;
+    transition: 500ms ease-in-out !important;
+}
+
+.wide-btn:hover {
+    width: 300px;
+}
+
+#profileImage {
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 1px 2px 5px rgba(0, 0, 0, 0.25);
+    border-radius: 100px;
+}
+
+.form-control {
+    padding: 10px !important;
+    outline: none !important;
+    /*border: 3px solid rgba(0, 0, 0, 0.25) !important;*/
+    border: none !important;
+    background-color: rgba(0, 0, 0, 0.25) !important;
+    border-radius: 20px !important;
+    text-align: center;
+    color: white !important;
+    font-size: 15px !important;
+}
+
+.form-control:focus {
+    box-shadow: 0 0 4px 2px rgba(253, 253, 253, 0.5) !important;
+}
+
+.form-control:active {
+    /*border: 3px solid rgba(0, 0, 0, 0.25) !important;*/
+}
+
+
+.form-control:focus-within {
+    background: none;
+    color: white;
+}
+
+.form-label{
+    color: white !important;
+    font-size: 20px !important;
+}
+
+.form-text {
+    color: rgba(255, 255, 255, 0.7) !important;
+    font-size: 13px !important;
+}
+
+.form-select {
+    padding-right: 0.75rem !important;
+}
+
+.alert {
+    border-radius: 30px;
+}
