@@ -3,11 +3,14 @@ import {Button, Form} from "react-bootstrap"
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap-icons/font/bootstrap-icons.css'
 import {CustomSlider} from "./CustomSlider"
+import classNames from 'classnames'
+
 
 function App() {
     const [isLoggedIn, setIsLoggedIn] = useState(false)
     const [calendarsArray, setCalendarsArray] = useState([])
     const [calendarID, setCalendarID] = useState()
+    const [progress, setProgress] = useState({value: 0, desc: "", color: "info"})
     const [userInfo, setUserInfo] = useState({
         family_name: "",
         given_name: "",
@@ -112,12 +115,15 @@ function App() {
             password: elements[3].value
         }
 
+        setProgress({value: 30, desc: "czyszczenie kalendarza...", color: "info"})
         fetch("/clearCalendar", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({calendarId: form.calendarId})
         })
             .then(async () => {
+                setProgress({value: 60, desc: "pobieranie kalendarza ZUT...", color: "info"})
+
                 await fetch("/getTimetable", {
                     method: "POST",
                     headers: {"Content-Type": "application/json"},
@@ -131,6 +137,8 @@ function App() {
                         return r.json()
                     })
                     .then(timetable => {
+                        setProgress({value: 90, desc: "wpisywanie planu do Google...", color: "info"})
+
                         fetch("/addEvents", {
                             method: "POST",
                             headers: {
@@ -143,22 +151,44 @@ function App() {
                             })
                         })
                             .then(res => {
+                                if (res.status === 200) {
+                                    setProgress({value: 100, desc: "Gotowe! 😅", color: "success"})
+                                } else {
+                                    setProgress({value: 100, desc: "Wystąpił błąd podczas wpisywania planu", color: "danger"})
+                                }
                                 console.log(res)
                             })
                             .catch(err => {
+                                setProgress({value: 100, desc: "Wystąpił błąd podczas wpisywania planu", color: "danger"})
                                 console.log(err)
                             })
                     })
                     .catch(err => {
+                        setProgress({value: 100, desc: "Wystąpił błąd podczas pobierania planu", color: "danger"})
                         console.log(err)
                     })
             })
             .catch(err => {
+                setProgress({value: 100, desc: "Wystąpił błąd podczas czyszczenia kalendarza", color: "danger"})
                 console.log(err)
             })
 
 
     }
+
+    // className="progress w-100 mb-4"
+
+    const progressClassNames = classNames([
+        'progress',
+        'mb-4',
+        progress.value > 0 ? 'w-100' : 'hide-progress-bar'
+    ])
+
+    const progressBarClassNames = classNames([
+        'progress-bar',
+        progress.value < 100 && 'progress-bar-striped progress-bar-animated',
+        `bg-${progress.color}`,
+    ])
 
     return (
         <div className="App">
@@ -241,12 +271,23 @@ function App() {
                         variant="light"
                         type="submit"
                         id={"sendBtn"}
-                        className={"mb-5 wide-btn"}
+                        className={"mb-4 wide-btn"}
                         disabled={!isLoggedIn}>
                         Pobierz plan zajęć
                     </Button>
 
+                    <div className={progressClassNames}>
+                        <div
+                            className={progressBarClassNames}
+                            role="progressbar"
+                            style={{width: progress.value + "%"}}>
+                            {progress.desc}
+                        </div>
+                    </div>
+
                 </Form>
+
+
 
             </div>
 

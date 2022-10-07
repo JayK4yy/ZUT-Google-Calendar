@@ -78,7 +78,7 @@ app.post("/clearCalendar", (req, res, next) => {
 
     let counter = 0
 
-    calendar.events.list({calendarId: req.body.calendarId})
+    calendar.events.list({calendarId: req.body.calendarId, maxResults: 1000})
         .then(r => {
             // console.log("r -> ", r)
             return r.data.items
@@ -144,10 +144,11 @@ app.post("/addEvents", async (req, res, next) => {
 
     let promiseArray = []
 
+    // TODO zrobić delay jak w deleteEvent
+
     for (const event of finalTimetable) {
-        promiseArray.push(new Promise(async (resolve, reject) => {
-            await delay(25)
-            await calendar.events.insert({
+        promiseArray.push(new Promise((resolve, reject) => {
+            calendar.events.insert({
                 auth: oauth2client,
                 calendarId: req.body.calendarId,
                 resource: event,
@@ -157,7 +158,6 @@ app.post("/addEvents", async (req, res, next) => {
                     console.log("created event ", ++counter, " of ", finalTimetableLength)
                     resolve(res)
                 }
-
             })
         }))
     }
