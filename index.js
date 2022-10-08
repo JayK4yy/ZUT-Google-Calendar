@@ -23,6 +23,29 @@ let oauth2client = new google.auth.OAuth2(
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
+const getTimeBetween = (timeAhead) => {
+    let timeMin, timeMax
+
+    switch (timeAhead) {
+        case 20:
+            // 2 tygodnie
+            timeMin = moment().set({hour:0,minute:0,second:0,millisecond:0})
+            timeMax = moment()
+                .add(2, 'weeks')
+                .set({hour: 0, minute: 0, second: 0, millisecond: 0})
+            break
+        case 40:
+            // 2 miesiące
+            timeMin = moment().set({hour:0,minute:0,second:0,millisecond:0})
+            timeMax = moment()
+                .add(2, 'months')
+                .set({hour: 0, minute: 0, second: 0, millisecond: 0})
+            break
+    }
+
+    return [timeMin, timeMax]
+}
+
 app.post("/auth/google", (req, res) => {
 
     const url = oauth2client.generateAuthUrl({
@@ -42,13 +65,13 @@ app.post("/auth/google", (req, res) => {
 app.get("/oauth2/redirect/google", async (req, res) => {
     // get code from url
     const code = req.query.code
-    console.log("google auth code -> ", code)
+    // console.log("google auth code -> ", code)
     // get access token
     oauth2client.getToken(code, (err, tokens) => {
         if (err) {
             console.log("error with getting token -> ", err)
         }
-        console.log("tokens -> ", tokens)
+        // console.log("tokens -> ", tokens)
         // const accessToken = tokens.access_token
         oauth2client.setCredentials(tokens)
         // const refreshToken = tokens.refresh_token
@@ -63,7 +86,7 @@ app.post("/getTimetable", (req, res, next) => {
         getTimetable(req.body.login, req.body.password, req.body.semester)
             .then(timetable => {
                 // console.log(timetable)
-                res.send({timetable})
+                res.send(timetable)
             })
     } catch (err) {
         next(err)
@@ -77,8 +100,40 @@ app.post("/clearCalendar", (req, res, next) => {
     })
 
     let counter = 0
+    // let timeAhead = req.body.timeAhead
+    // let timeMin, timeMax
+    //
+    // switch (timeAhead) {
+    //     case 20:
+    //         // 2 tygodnie
+    //         timeMin = moment()
+    //             .set({hour:0,minute:0,second:0,millisecond:0})
+    //             .format()
+    //         timeMax = moment()
+    //             .add(2, 'weeks')
+    //             .set({hour: 0, minute: 0, second: 0, millisecond: 0})
+    //             .format()
+    //         break
+    //     case 40:
+    //         // 2 miesiące
+    //         timeMin = moment()
+    //             .set({hour:0,minute:0,second:0,millisecond:0})
+    //             .format()
+    //         timeMax = moment()
+    //             .add(2, 'months')
+    //             .set({hour: 0, minute: 0, second: 0, millisecond: 0})
+    //             .format()
+    //         break
+    // }
 
-    calendar.events.list({calendarId: req.body.calendarId, maxResults: 1000})
+    const [timeMin, timeMax] = getTimeBetween(req.body.timeAhead)
+
+    calendar.events.list({
+        calendarId: req.body.calendarId,
+        maxResults: 1000,
+        timeMin: timeMin ? timeMin.format() : undefined,
+        timeMax: timeMax ? timeMax.format() : undefined
+    })
         .then(r => {
             // console.log("r -> ", r)
             return r.data.items
@@ -87,7 +142,7 @@ app.post("/clearCalendar", (req, res, next) => {
 
             // delete all events
             for (let event of events) {
-                await delay(25)
+                await delay(10)
                 await calendar.events.delete({
                     calendarId: req.body.calendarId,
                     eventId: event.id
@@ -98,74 +153,68 @@ app.post("/clearCalendar", (req, res, next) => {
 
         })
         .then(() => {
-            res.send("Calendar cleared, deleted " + counter + " events")
+            res.json({
+                message: "Calendar cleared, deleted " + counter + " events",
+                timeMin: timeMin,
+                timeMax: timeMax
+            })
         })
         .catch(err => {
             next(err)
         })
 })
 
-app.post("/addEvents", async (req, res, next) => {
+app.post("/addEvents", (req, res, next) => {
     let calendar = google.calendar({
         version: "v3",
         auth: oauth2client
     })
 
-    let timeAhead = req.body.timeAhead
-    let limitDate
-    switch (timeAhead) {
-        case 20:
-            limitDate = moment().add(14)
-            break
-        case 40:
-            limitDate = moment().add(60)
-            break
-        default:
-            limitDate = null
-    }
+    const promise = new Promise((resolve, reject) => {
+        const [timeMin, timeMax] = getTimeBetween(req.body.timeAhead)
 
-    let finalTimetable = []
-    let timetable = req.body.timetable.timetable
+        // console.log("timeMin -> ", timeMin)
+        // console.log("timeMax -> ", timeMax)
 
-    if (limitDate !== null) {
-        timetable.forEach(event => {
-            const eventDate = moment(event.start.dateTime)
+        let finalTimetable = []
+        let timetable = req.body.timetable
 
-            if (limitDate.diff(eventDate) > 0) {
-                finalTimetable.push(event)
-            }
-        })
-    } else {
-        finalTimetable = timetable
-    }
+        if (timeMin && timeMax) {
+            timetable.forEach(event => {
+                const eventDate = moment(event.start.dateTime)
 
-    let finalTimetableLength = finalTimetable.length
-    let counter = 0
-
-    let promiseArray = []
-
-    // TODO zrobić delay jak w deleteEvent
-
-    for (const event of finalTimetable) {
-        promiseArray.push(new Promise((resolve, reject) => {
-            calendar.events.insert({
-                auth: oauth2client,
-                calendarId: req.body.calendarId,
-                resource: event,
-            }, function (err, res) {
-                if (err) {reject(err)}
-                else {
-                    console.log("created event ", ++counter, " of ", finalTimetableLength)
-                    resolve(res)
+                if (timeMax.diff(eventDate) > 0 && eventDate.diff(timeMin) > 0) {
+                    finalTimetable.push(event)
                 }
             })
-        }))
-    }
+        } else {
+            finalTimetable = timetable
+        }
 
-    await Promise.all(promiseArray)
-        .catch(err => next(err))
+        resolve(finalTimetable)
+    })
 
-    res.send("Created " + counter + " events")
+    let counter = 0
+
+    promise
+        .then(async timetable => {
+            for (let event of timetable) {
+                await delay(10)
+                await calendar.events.insert({
+                    auth: oauth2client,
+                    calendarId: req.body.calendarId,
+                    resource: event,
+                })
+                    .then(() => console.log("created event ", ++counter, " of ", timetable.length))
+                    .catch(err => console.log(err))
+            }
+        })
+        .then(() => {
+            res.send("Created " + counter + " events")
+        })
+        .catch(err => {
+            next(err)
+        })
 
 })
 

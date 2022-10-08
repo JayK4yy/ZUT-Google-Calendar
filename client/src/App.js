@@ -1,7 +1,5 @@
 import {useEffect, useState} from "react"
 import {Button, Form} from "react-bootstrap"
-import 'bootstrap/dist/css/bootstrap.min.css'
-import 'bootstrap-icons/font/bootstrap-icons.css'
 import {CustomSlider} from "./CustomSlider"
 import classNames from 'classnames'
 
@@ -36,7 +34,7 @@ function App() {
             const response = await request.json()
             window.location.href = response.url
         } catch (error) {
-            console.log("App.js 12 | error", error)
+            console.log(error)
         }
     }
 
@@ -63,6 +61,7 @@ function App() {
                 })
                 .catch(err => {
                     console.log(err)
+                    logout()
                 })
         }
     }
@@ -78,6 +77,7 @@ function App() {
             })
             .catch(err => {
                 console.log(err)
+                logout()
             })
     }
 
@@ -110,7 +110,7 @@ function App() {
         // console.log(elements)
         let form = {
             calendarId: calendarID,
-            timeAhead: elements[1].value,
+            timeAhead: parseInt(elements[1].value),
             login: elements[2].value,
             password: elements[3].value
         }
@@ -119,7 +119,10 @@ function App() {
         fetch("/clearCalendar", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({calendarId: form.calendarId})
+            body: JSON.stringify({
+                calendarId: form.calendarId,
+                timeAhead: form.timeAhead
+            })
         })
             .then(async () => {
                 setProgress({value: 60, desc: "pobieranie kalendarza ZUT...", color: "info"})
@@ -130,41 +133,55 @@ function App() {
                     body: JSON.stringify({
                         login: form.login,
                         password: form.password,
-                        semester: parseInt(form.timeAhead)
+                        semester: form.timeAhead
                     })
                 })
                     .then(r => {
                         return r.json()
                     })
                     .then(timetable => {
-                        setProgress({value: 90, desc: "wpisywanie planu do Google...", color: "info"})
+                        console.log(timetable)
+                        if (timetable.error) {
+                            throw timetable.error
+                        } else {
 
-                        fetch("/addEvents", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json"
-                            },
-                            body: JSON.stringify({
-                                timeAhead: form.timeAhead,
-                                timetable: timetable,
-                                calendarId: form.calendarId
+                            setProgress({value: 90, desc: "wpisywanie planu do Google...", color: "info"})
+
+                            fetch("/addEvents", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json"
+                                },
+                                body: JSON.stringify({
+                                    timeAhead: form.timeAhead,
+                                    timetable: timetable,
+                                    calendarId: form.calendarId
+                                })
                             })
-                        })
-                            .then(res => {
-                                if (res.status === 200) {
-                                    setProgress({value: 100, desc: "Gotowe! 😅", color: "success"})
-                                } else {
-                                    setProgress({value: 100, desc: "Wystąpił błąd podczas wpisywania planu", color: "danger"})
-                                }
-                                console.log(res)
-                            })
-                            .catch(err => {
-                                setProgress({value: 100, desc: "Wystąpił błąd podczas wpisywania planu", color: "danger"})
-                                console.log(err)
-                            })
+                                .then(res => {
+                                    if (res.status === 200) {
+                                        setProgress({value: 100, desc: "Gotowe! 😅", color: "success"})
+                                    } else {
+                                        setProgress({
+                                            value: 100,
+                                            desc: "Wystąpił błąd podczas wpisywania planu",
+                                            color: "danger"
+                                        })
+                                    }
+                                    console.log(res)
+                                })
+                                .catch(err => {
+                                    setProgress({
+                                        value: 100,
+                                        desc: "Wystąpił błąd podczas wpisywania planu",
+                                        color: "danger"
+                                    })
+                                    console.log(err)
+                                })
+                        }
                     })
                     .catch(err => {
-                        setProgress({value: 100, desc: "Wystąpił błąd podczas pobierania planu", color: "danger"})
+                        setProgress({value: 100, desc: "Wystąpił błąd podczas logowania do eDziekanatu, spróbuj ponownie...", color: "danger"})
                         console.log(err)
                     })
             })
@@ -199,12 +216,22 @@ function App() {
                     ? (
                         <div className={"d-flex flex-row align-items-center justify-content-between w-100 px-4 my-4"}>
                             <div className={"d-flex flex-row align-items-center"}>
-                                <img
-                                    src={userInfo.picture}
-                                    alt={"Profile picture"}
-                                    id={"profileImage"}
-                                    width={60}/>
-                                <h5 className={"ms-3 mt-2 d-none d-sm-block"}>Witaj, {userInfo.given_name}</h5>
+                                {userInfo.id !== "" ? (
+                                    <>
+                                        <img
+                                            src={userInfo.picture}
+                                            alt={"Profile picture"}
+                                            id={"profileImage"}
+                                            width={60}/>
+                                        <h5 className={"ms-3 mt-2 d-none d-sm-block"}>Witaj, {userInfo.given_name}</h5>
+                                    </>
+                                    ) : (
+                                    <>
+                                        <div id={"profileImage"} style={{width: "60px", height: "60px"}}></div>
+                                        <h5 className={"ms-3 mt-2 d-none d-sm-block"}>Witaj, ...</h5>
+                                    </>
+                                )}
+
                             </div>
                             <Button
                                 variant={"outline-light"}
@@ -242,7 +269,9 @@ function App() {
                                 return <option key={index} data-id={item.value}>{item.label}</option>
                             })}
                         </Form.Select>
-                        <Form.Text>Wybierz kalendarz do którego chcesz zaimportować plan zajęć.</Form.Text>
+                        <Form.Text>Wybierz kalendarz do którego chcesz zaimportować plan zajęć.<br/>
+                        <b className={"blinking"}>Uwaga!!!</b> Nie wybieraj ważnego kalendarza, ponieważ program usuwa wszystkie wydarzenia!<br/>
+                        Najlepiej stwórz osobny kalendarz, na przykład "Plan ZUT".</Form.Text>
                     </Form.Group>
 
                     <Form.Group controlId={"timeAhead"} className={"mb-3"}>
@@ -286,7 +315,6 @@ function App() {
                     </div>
 
                 </Form>
-
 
 
             </div>

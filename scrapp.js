@@ -1,7 +1,7 @@
 const puppeteer = require("puppeteer");
 
 const getTimetable = async (login, password, semester) => {
-    const browser = await puppeteer.launch({headless: false});
+    const browser = await puppeteer.launch({headless: true});
     const page = await browser.newPage();
     await page.goto('https://edziekanat.zut.edu.pl/WU/Logowanie2.aspx');
 
@@ -9,13 +9,20 @@ const getTimetable = async (login, password, semester) => {
     const passSelector =     "#ctl00_ctl00_ContentPlaceHolder_MiddleContentPlaceHolder_txtHaslo";
     const loginBtnSelector = "#ctl00_ctl00_ContentPlaceHolder_MiddleContentPlaceHolder_butLoguj";
     const semBtnSelector =   "#ctl00_ctl00_ContentPlaceHolder_RightContentPlaceHolder_rbJak_2";
-    const menuSelector =     "#ctl00_ctl00_TopMenuPlaceHolder_wumasterMenuTop_menuTop"
-    const nextSelector =     "#ctl00_ctl00_ContentPlaceHolder_RightContentPlaceHolder_butN"
+    const menuSelector =     "#ctl00_ctl00_TopMenuPlaceHolder_wumasterMenuTop_menuTop";
+    const nextSelector =     "#ctl00_ctl00_ContentPlaceHolder_RightContentPlaceHolder_butN";
 
     await page.waitForSelector(loginSelector);
     await page.type(loginSelector, login, {delay: 50});
     await page.type(passSelector, password, {delay: 50});
     await page.click(loginBtnSelector);
+    await page.waitForNetworkIdle();
+
+    if (page.url() !== "https://edziekanat.zut.edu.pl/WU/News.aspx") {
+        await browser.close();
+        return {error: "Invalid login credentials"};
+    }
+
     await page.waitForSelector(menuSelector);
     await page.goto("https://edziekanat.zut.edu.pl/WU/PodzGodzin.aspx");
     await page.waitForSelector(semBtnSelector);
@@ -29,7 +36,7 @@ const getTimetable = async (login, password, semester) => {
     }
 
 
-    const timetable = await page.evaluate(() => {
+    let timetable = await page.evaluate(() => {
         const trs = Array.from(document.querySelectorAll('.gridDane'));
         let trsObjects = [];
         trs.map(tr => {

@@ -111,3 +111,14 @@ h5, #title {
     width: 50px !important;
     margin: -55px auto 0 !important;
 }
+
+.blinking{
+    animation: blinkingText 3s infinite;
+}
+@keyframes blinkingText{
+    0%{     color: white;    }
+    25%{    color: white; }
+    50%{    color: #4d4d4d; }
+    75%{    color: white;  }
+    100%{   color: white;    }
+}
