@@ -100,31 +100,6 @@ app.post("/clearCalendar", (req, res, next) => {
     })
 
     let counter = 0
-    // let timeAhead = req.body.timeAhead
-    // let timeMin, timeMax
-    //
-    // switch (timeAhead) {
-    //     case 20:
-    //         // 2 tygodnie
-    //         timeMin = moment()
-    //             .set({hour:0,minute:0,second:0,millisecond:0})
-    //             .format()
-    //         timeMax = moment()
-    //             .add(2, 'weeks')
-    //             .set({hour: 0, minute: 0, second: 0, millisecond: 0})
-    //             .format()
-    //         break
-    //     case 40:
-    //         // 2 miesiące
-    //         timeMin = moment()
-    //             .set({hour:0,minute:0,second:0,millisecond:0})
-    //             .format()
-    //         timeMax = moment()
-    //             .add(2, 'months')
-    //             .set({hour: 0, minute: 0, second: 0, millisecond: 0})
-    //             .format()
-    //         break
-    // }
 
     const [timeMin, timeMax] = getTimeBetween(req.body.timeAhead)
 
@@ -170,11 +145,8 @@ app.post("/addEvents", (req, res, next) => {
         auth: oauth2client
     })
 
-    const promise = new Promise((resolve, reject) => {
+    const promise = new Promise((resolve, _) => {
         const [timeMin, timeMax] = getTimeBetween(req.body.timeAhead)
-
-        // console.log("timeMin -> ", timeMin)
-        // console.log("timeMax -> ", timeMax)
 
         let finalTimetable = []
         let timetable = req.body.timetable

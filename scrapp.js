@@ -76,11 +76,4 @@ const getTimetable = async (login, password, semester) => {
     return timetable;
 }
 
-// getTimetable()
-//     .then(timetable => {
-//             console.log(timetable);
-//     });
-
-
 module.exports = getTimetable
-
