@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "server": "nodemon index.js",
-    "development": "concurrently --kill-others-on-fail \"npm run server\" \"npm run start --prefix client\""
+    "development": "concurrently --kill-others-on-fail \"npm run server\" \"npm run start --prefix client\"",
+    "start": "concurrently --kill-others-on-fail \"node index.js\" \"npm run start --prefix client\""
   },
   "author": "JayK4yy",
   "license": "ISC",
