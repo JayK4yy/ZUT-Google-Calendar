@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "server": "nodemon index.js",
     "development": "concurrently --kill-others-on-fail \"npm run server\" \"npm run start --prefix client\"",
-    "start": "concurrently --kill-others-on-fail \"node index.js\" \"npm run start --prefix client\""
+    "start": "node index.js",
+    "deploy": "gcloud config set project focus-student-314921 && npm run build --prefix client && gcloud app deploy"
   },
   "author": "JayK4yy",
   "license": "ISC",
@@ -16,6 +17,7 @@
     "body-parser": "^1.20.0",
     "concurrently": "^7.4.0",
     "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.18.1",
     "googleapis": "^105.0.0",

@@ -2,6 +2,7 @@ import {useEffect, useState} from "react"
 import {Button, Form} from "react-bootstrap"
 import {CustomSlider} from "./CustomSlider"
 import classNames from 'classnames'
+import axios from 'axios'
 
 
 function App() {
@@ -28,11 +29,28 @@ function App() {
         }
     }, [])
 
+    let host = document.location.host;
+    let react_api;
+
+    if (host.includes("localhost")) {
+        react_api = "http://localhost:5000/"
+    } else {
+        react_api = "https://" + host;
+    }
+
+    const _axios = axios.create({
+        baseURL: react_api,
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+
     const handleGoogleLogin = async () => {
         try {
-            const request = await fetch("/auth/google", {method: "POST",})
-            const response = await request.json()
-            window.location.href = response.url
+            _axios.post("/auth/google")
+                .then(res => {
+                    window.location.href = res.data.url
+                })
         } catch (error) {
             console.log(error)
         }
@@ -46,12 +64,9 @@ function App() {
 
     const getMyGoogleCalendarsList = () => {
         if (calendarsArray.length === 0) {
-            fetch("/calendarList")
-                .then(res => {
-                    return res.json()
-                })
+            _axios.get("/calendarList")
                 .then(result => {
-                    result.data.items.forEach(item => {
+                    result.data.data.items.forEach(item => {
                         const tempItem = {
                             label: item.primary === true ? "Kalendarz główny" : item.summary,
                             value: item.id
@@ -67,13 +82,10 @@ function App() {
     }
 
     const getUserInfo = () => {
-        fetch("/userInfo")
-            .then(res => {
-                return res.json()
-            })
+        _axios.get("/userInfo")
             .then(result => {
                 // console.log(result.data)
-                setUserInfo(result.data)
+                setUserInfo(result.data.data)
             })
             .catch(err => {
                 console.log(err)
@@ -116,47 +128,30 @@ function App() {
         }
 
         setProgress({value: 30, desc: "czyszczenie kalendarza...", color: "info"})
-        fetch("/clearCalendar", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({
-                calendarId: form.calendarId,
-                timeAhead: form.timeAhead
-            })
+        _axios.post("/clearCalendar", {
+            calendarId: form.calendarId,
+            timeAhead: form.timeAhead
         })
-            .then(async () => {
+            .then(() => {
                 setProgress({value: 60, desc: "pobieranie kalendarza ZUT...", color: "info"})
 
-                await fetch("/getTimetable", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({
-                        login: form.login,
-                        password: form.password,
-                        semester: form.timeAhead
-                    })
+                _axios.post("/getTimetable", {
+                    login: form.login,
+                    password: form.password,
+                    semester: form.timeAhead
                 })
-                    .then(r => {
-                        return r.json()
-                    })
                     .then(timetable => {
-                        console.log(timetable)
-                        if (timetable.error) {
-                            throw timetable.error
+                        // console.log("timetable -> ", timetable)
+                        if (timetable.data.error) {
+                            throw timetable.data.error
                         } else {
 
                             setProgress({value: 90, desc: "wpisywanie planu do Google...", color: "info"})
 
-                            fetch("/addEvents", {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json"
-                                },
-                                body: JSON.stringify({
-                                    timeAhead: form.timeAhead,
-                                    timetable: timetable,
-                                    calendarId: form.calendarId
-                                })
+                            _axios.post("/addEvents", {
+                                timeAhead: form.timeAhead,
+                                timetable: timetable.data,
+                                calendarId: form.calendarId
                             })
                                 .then(res => {
                                     if (res.status === 200) {
@@ -168,7 +163,7 @@ function App() {
                                             color: "danger"
                                         })
                                     }
-                                    console.log(res)
+                                    // console.log(res)
                                 })
                                 .catch(err => {
                                     setProgress({

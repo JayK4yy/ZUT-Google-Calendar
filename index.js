@@ -4,6 +4,8 @@ const getTimetable = require("./scrapp.js")
 const bodyParser = require("body-parser")
 const cookieParser = require("cookie-parser")
 const moment = require('moment')
+const cors = require("cors")
+const path = require("path");
 
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config()
@@ -11,14 +13,16 @@ if (process.env.NODE_ENV !== 'production') {
 
 const app = express()
 
+app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
 app.use(cookieParser())
+app.use(cors())
 
 // Setup your API client
 let oauth2client = new google.auth.OAuth2(
     process.env.CLIENT_ID,
     process.env.CLIENT_SECRET,
-    "http://localhost:5000/oauth2/redirect/google"
+    process.env.REDIRECT_URI
 )
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
@@ -77,7 +81,9 @@ app.get("/oauth2/redirect/google", async (req, res) => {
         // const refreshToken = tokens.refresh_token
 
         res.cookie("isLoggedIn", true)
-        res.redirect(`http://localhost:3000/`)
+        res.redirect(process.env.NODE_ENV === "production"
+            ? "https://focus-student-314921.appspot.com/"
+            : "http://localhost:3000")
     })
 })
 
@@ -217,11 +223,23 @@ app.get("/userInfo", (req, res, next) => {
         })
 })
 
+app.get("/api", (req, res) => {
+    res.json({ message: "Hello from server!" });
+});
 
-const hostname = 'localhost'
+if (process.env.NODE_ENV === "production") {
+    // serve static assets normally
+    app.use(express.static(__dirname + '/client/build'));
+}
+
+// handle every other route with index.html, which will contain
+// a script tag to your application's JavaScript file(s).
+app.get('*', (request, response) => {
+    response.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
+});
+
 const port = process.env.PORT || 5000
 
-
-app.listen(port, hostname, () => {
-    console.log(`Server running at http://${hostname}:${port}/`)
-})
+app.listen(port, () => {
+    console.log(`server running on port ${port}`);
+});

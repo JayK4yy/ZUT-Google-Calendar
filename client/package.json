@@ -2,7 +2,6 @@
   "name": "zut-calendar-react-app",
   "version": "0.1.0",
   "private": true,
-  "proxy": "http://localhost:5000",
   "dependencies": {
     "@emotion/react": "^11.10.4",
     "@emotion/styled": "^11.10.4",
@@ -10,6 +9,7 @@
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "axios": "^1.1.2",
     "bootstrap": "^5.2.1",
     "bootstrap-icons": "^1.9.1",
     "classnames": "^2.3.2",

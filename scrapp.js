@@ -1,7 +1,7 @@
 const puppeteer = require("puppeteer");
 
 const getTimetable = async (login, password, semester) => {
-    const browser = await puppeteer.launch({headless: true});
+    const browser = await puppeteer.launch({headless: true, args: ['--no-sandbox']});
     const page = await browser.newPage();
     await page.goto('https://edziekanat.zut.edu.pl/WU/Logowanie2.aspx');
 
