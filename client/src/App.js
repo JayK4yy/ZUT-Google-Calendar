@@ -205,7 +205,9 @@ function App() {
     return (
         <div className="App">
 
-            <div className={"container text-center mt-3 mt-lg-5"}>
+            <div className={"spacing"}></div>
+
+            <div className={"container text-center"}>
 
                 {isLoggedIn
                     ? (
@@ -313,6 +315,8 @@ function App() {
 
 
             </div>
+
+            <div className={"spacing"}></div>
 
         </div>
     )

@@ -1,14 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
 
 body {
-    background: url("../public/background.jpg") center;
-    -webkit-background-size: cover;
-    -moz-background-size: cover;
-    -o-background-size: cover;
+    background-image: url("../public/background.jpg");
     background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
     height: 100vh;
     color: white !important;
-    padding: 40px 20px 20px;
+    padding: 0 20px 0 20px;
     font-family: 'Poppins', sans-serif !important;
 }
 
@@ -121,4 +120,8 @@ h5, #title {
     50%{    color: #4d4d4d; }
     75%{    color: white;  }
     100%{   color: white;    }
+}
+
+.spacing {
+    height: 40px;
 }
